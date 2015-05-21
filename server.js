@@ -1,9 +1,50 @@
+
 var express = require('express');
 var app = express();
 // Route implementation
-app.get('/hello.txt', function(req, res) {
-  res.send('Hello World');
+//put serialize, deserialize, localStrategy
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
 });
+
+passport.deserializeUser(function(id, done) {
+  var user = users[id];
+    done(err, user);
+});
+
+var passport = require('passport')
+  , LocalStrategy = require('passport-local').Strategy;
+//verify function below: line 20
+passport.use(new LocalStrategy({
+  usernameField: 'user[id]',
+  passwordField: 'user[meta][password]'
+},
+  function(id, password, done) {
+    var user = users[id];
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+      if (user.password !== password) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+      return done(null, user);
+    }
+));
+// when done() is called it is actually calling function(err, user, info) from below and implementing that callback
+
+
+
+var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(session({ secret: 'Why choose Ember over Angular? Because it is on fire!'}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+ //add cookieParser, session, passport, from middleware section of passport.
+
 var server = app.listen(3000, function() {
     console.log('Listening on port %d', server.address().port);
 });
@@ -15,6 +56,7 @@ var server = app.listen(3000, function() {
       id: 'joeschmidt',
       name: 'Joe Schmidt',
       email: 'joeschmidt@schmidt.com',
+      password: '123456',
       photo: "assets/images/avatar-yellow.png",
       followedByAuthenticatedUser: true
     },
@@ -22,6 +64,7 @@ var server = app.listen(3000, function() {
       id: 'carollovell',
       name: 'Carol Lovell',
       email: 'carol@lovelegos.com',
+      password: '123456',
       photo: "assets/images/avatar-red.png",
       followedByAuthenticatedUser: true
     },
@@ -29,6 +72,7 @@ var server = app.listen(3000, function() {
       id: 'krysrutledge',
       name: 'Krys Rutledge',
       email: 'krys@hulkitup.com',
+      password: '123456',
       photo: "assets/images/avatar-turquoise.png",
       followedByAuthenticatedUser: true
     }
@@ -63,23 +107,37 @@ var server = app.listen(3000, function() {
       var user = {
         id: req.body.user.id,
         name: req.body.user.name,
-        email: req.body.user.email
+        email: req.body.user.email,
+        password: req.body.user.meta.password
       };
+      users[user.id] = user;
       res.send({
         user: user
       });
     } else if (req.body.user.meta.operation === 'login') {
-      if (users[req.body.user.id]) {
-        res.send({
-          user: users[req.body.user.id]
+      passport.authenticate('local', function(err, user, info) {
+        if (err) { return res.sendStatus(500); }
+        if (!user) { return res.sendStatus(404); }
+        req.logIn(user, function(err) {
+          if (err) { return res.sendStatus(500); }
+          res.send({user: user});
         });
-      } else {
-        res.status(404).send('Invalid username/password!');
+      })(req, res);
+      /*if (users[req.body.user.id]) {
+        if(users[req.body.user.meta.password]) {
+          res.send({
+            user: users[req.body.user.id]
+          });
+        } else {
+          res.status(404).send('Invalid password!');
         }
+      } else {
+        res.status(404).send('Invalid username!');
+      }
     } else {
       res.status(404).send('Invalid operation!');
-    }
-  });
+    }*/
+ }
 
   usersRouter.put('/:id', function(req, res) {
   var id = req.params.id;
