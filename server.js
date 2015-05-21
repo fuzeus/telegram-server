@@ -122,7 +122,7 @@ var server = app.listen(3000, function() {
           if (err) { return res.sendStatus(500); }
           res.send({user: user});
         });
-      })(req, res);
+      }(req, res));
       /*if (users[req.body.user.id]) {
         if(users[req.body.user.meta.password]) {
           res.send({
@@ -138,6 +138,7 @@ var server = app.listen(3000, function() {
       res.status(404).send('Invalid operation!');
     }*/
  }
+ });
 
   usersRouter.put('/:id', function(req, res) {
   var id = req.params.id;
