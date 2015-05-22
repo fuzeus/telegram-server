@@ -6,14 +6,14 @@ var logger = require('nlogger').logger(module);
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 passport.serializeUser(function(user, done) {
-    logger.info('Info message');
+    logger.info('Inside serializeUser in order to provide unique info for the cookie');
     logger.debug('Entering serializeUser with the following arguments, user, done');
     done(null, user.id);
 });
 
 passport.deserializeUser(function(id, done) {
     var user = users[id];
-    done(err, user);
+    done(null, user);
 });
 
 //verify function below: line 20
@@ -117,7 +117,7 @@ usersRouter.get('/:id', function(req, res) {
 });
 
 usersRouter.post('/', function(req, res) {
-    logger.info('Info message');
+    logger.info('Inside usersRouter post route');
     logger.debug('Entering post route to determine if operation is signup or login');
     if (req.body.user.meta.operation === 'signup') {
         var user = {
@@ -132,7 +132,7 @@ usersRouter.post('/', function(req, res) {
         });
     } else if (req.body.user.meta.operation === 'login') {
         passport.authenticate('local', function(err, user, info) {
-            logger.info('Info message');
+            logger.info('Inside passport.authenticate during login operation');
             logger.debug('Entering passport.authenticate prior to verify function');
             if (err) {
                 return res.sendStatus(500);
@@ -142,7 +142,7 @@ usersRouter.post('/', function(req, res) {
             }
             req.logIn(user, function(err) {
                 logger.info('Info message');
-                logger.debug('Login failed here');
+                logger.debug('Entering req.logIn in order to set the cookie and prior to calling serializeUser');
                 if (err) {
                     return res.sendStatus(500);
                 }
@@ -150,7 +150,7 @@ usersRouter.post('/', function(req, res) {
                     user: user
                 });
             });
-        }(req, res));
+        })(req, res);
         /*if (users[req.body.user.id]) {
         if(users[req.body.user.meta.password]) {
           res.send({
@@ -236,7 +236,16 @@ postsRouter.get('/', function(req, res) {
     }
 });
 
-postsRouter.post('/', function(req, res) {
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  } else {
+    return res.sendStatus(403);
+  }
+}
+
+postsRouter.post('/', ensureAuthenticated, function(req, res) {
+  //if( req.user === req.body.post.author) {}
     currentPostId++;
     var post = {
         id: currentPostId,
@@ -262,3 +271,35 @@ postsRouter.delete('/:id', function(req, res) {
 });
 
 app.use('/api/posts', postsRouter);
+
+logoutRouter.get('/', function(req, res) {
+  res.send({
+    'logout': []
+  });
+});
+
+logoutRouter.post('/', function(req, res) {
+  res.status(200).end();
+});
+
+logoutRouter.get('/:id', function(req, res) {
+  res.send({
+    'logout': {
+      id: req.params.id
+    }
+  });
+});
+
+logoutRouter.put('/:id', function(req, res) {
+  res.send({
+    'logout': {
+      id: req.params.id
+    }
+  });
+});
+
+logoutRouter.delete('/:id', function(req, res) {
+  res.status(204).end();
+});
+
+app.use('/api/logout', logoutRouter);

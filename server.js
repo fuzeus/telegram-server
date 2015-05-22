@@ -208,7 +208,16 @@ var server = app.listen(3000, function() {
     }
   });
 
-  postsRouter.post('/', function(req, res) {
+  function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+      return next();
+    } else {
+      return res.sendStatus(403);
+    }
+  }
+
+  postsRouter.post('/', ensureAuthenticated, function(req, res) {
+    //if( req.user === req.body.post.author) {}
     currentPostId++;
     var post = {
       id: currentPostId,
@@ -234,3 +243,35 @@ var server = app.listen(3000, function() {
   });
 
   app.use('/api/posts', postsRouter);
+
+  logoutRouter.get('/', function(req, res) {
+  res.send({
+    'logout': []
+  });
+});
+
+logoutRouter.post('/', function(req, res) {
+  res.status(200).end();
+});
+
+logoutRouter.get('/:id', function(req, res) {
+  res.send({
+    'logout': {
+      id: req.params.id
+    }
+  });
+});
+
+logoutRouter.put('/:id', function(req, res) {
+  res.send({
+    'logout': {
+      id: req.params.id
+    }
+  });
+});
+
+logoutRouter.delete('/:id', function(req, res) {
+  res.status(204).end();
+});
+
+app.use('/api/logout', logoutRouter);
