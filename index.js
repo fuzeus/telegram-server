@@ -95,10 +95,16 @@ var allUsersArray = Object.keys(users).map(function(key) {
 });
 usersRouter.get('/', function(req, res) {
     if (req.query.isAuthenticated) {
+        if(req.isAuthenticated()) {
+          res.send({
+              users: [req.user]
+          });
+        } else{
+          res.send({
+              users: []
+          })
+        }
         // if you want to always be logged in
-        res.send({
-            users: [users['joeschmidt']]
-        });
 
         // if you don't want to be logged in
         //res.send({users: []});
@@ -127,9 +133,17 @@ usersRouter.post('/', function(req, res) {
             password: req.body.user.meta.password
         };
         users[user.id] = user;
-        res.send({
+        req.logIn(user, function(err) {
+          logger.info('Inside sign up authentication process');
+          logger.debug('Entering req.logIn in order to set the cookie and prior to calling serializeUser');
+          if (err) {
+              return res.sendStatus(500);
+          }
+
+          res.send({
             user: user
-        });
+          });
+        })
     } else if (req.body.user.meta.operation === 'login') {
         passport.authenticate('local', function(err, user, info) {
             logger.info('Inside passport.authenticate during login operation');
@@ -141,7 +155,7 @@ usersRouter.post('/', function(req, res) {
                 return res.sendStatus(404);
             }
             req.logIn(user, function(err) {
-                logger.info('Info message');
+                logger.info('Inside login authentication process');
                 logger.debug('Entering req.logIn in order to set the cookie and prior to calling serializeUser');
                 if (err) {
                     return res.sendStatus(500);
@@ -245,7 +259,7 @@ function ensureAuthenticated(req, res, next) {
 }
 
 postsRouter.post('/', ensureAuthenticated, function(req, res) {
-  //if( req.user === req.body.post.author) {}
+  if( req.user.id === req.body.post.author) {
     currentPostId++;
     var post = {
         id: currentPostId,
@@ -258,6 +272,9 @@ postsRouter.post('/', ensureAuthenticated, function(req, res) {
     res.send({
         "post": post
     });
+  } else {
+    return res.sendStatus(403);
+  }
 });
 
 postsRouter.get('/:id', function(req, res) {
@@ -267,39 +284,17 @@ postsRouter.get('/:id', function(req, res) {
 });
 
 postsRouter.delete('/:id', function(req, res) {
-    res.status(204).end();
+    res.sendStatus(204);
 });
 
 app.use('/api/posts', postsRouter);
 
-logoutRouter.get('/', function(req, res) {
-  res.send({
-    'logout': []
-  });
-});
+var logoutRouter = express.Router();
 
 logoutRouter.post('/', function(req, res) {
+  req.logout();
+
   res.status(200).end();
-});
-
-logoutRouter.get('/:id', function(req, res) {
-  res.send({
-    'logout': {
-      id: req.params.id
-    }
-  });
-});
-
-logoutRouter.put('/:id', function(req, res) {
-  res.send({
-    'logout': {
-      id: req.params.id
-    }
-  });
-});
-
-logoutRouter.delete('/:id', function(req, res) {
-  res.status(204).end();
 });
 
 app.use('/api/logout', logoutRouter);
