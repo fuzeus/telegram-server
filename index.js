@@ -12,7 +12,9 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
-    var user = users[id];
+    logger.info('Inside deserializeUser in order to extract unique info from the cookie');
+    logger.debug('Entering deserializeUser with the following arguments, id, done');
+    var user = User.findOne({id: id});
     done(null, user);
 });
 
@@ -22,20 +24,21 @@ passport.use(new LocalStrategy({
         passwordField: 'user[meta][password]'
     },
     function(id, password, done) {
-        logger.info('Info message');
         logger.debug('Entering the verify function with the following arguments, username, password');
-        var user = users[id];
-        if (!user) {
-            return done(null, false, {
-                message: 'Incorrect username.'
-            });
-        }
-        if (user.password !== password) {
-            return done(null, false, {
-                message: 'Incorrect password.'
-            });
-        }
-        return done(null, user);
+        User.findOne({ id: id }, function(err, user) {
+        //var user = users[id];
+            if (!user) {
+                return done(null, false, {
+                    message: 'Incorrect username.'
+                });
+            }
+            if (user.password !== password) {
+                return done(null, false, {
+                  message: 'Incorrect password.'
+                });
+            }
+            return done(null, user);
+        });
     }
 ));
 // when done() is called it is actually calling function(err, user, info) from below and implementing that callback
@@ -61,7 +64,21 @@ var server = app.listen(3000, function() {
     console.log('Listening on port %d', server.address().port);
 });
 
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/telegram');
+
 var usersRouter = express.Router();
+
+var userSchema = mongoose.Schema({
+    id: String,
+    name: String,
+    email: String,
+    password: String,
+    photo: String,
+    followedByAuthenticatedUser: Boolean
+});
+
+var User = mongoose.model('User', userSchema);
 
 var users = {
     'joeschmidt': {
@@ -126,13 +143,16 @@ usersRouter.post('/', function(req, res) {
     logger.info('Inside usersRouter post route');
     logger.debug('Entering post route to determine if operation is signup or login');
     if (req.body.user.meta.operation === 'signup') {
-        var user = {
+        var user = new User({
             id: req.body.user.id,
             name: req.body.user.name,
             email: req.body.user.email,
             password: req.body.user.meta.password
-        };
-        users[user.id] = user;
+        });
+        user.save(function(err, newUser){
+          if(err){return console.error(err)}//I think I should switch this for res.sendStatus(500);
+        });
+        //users[user.id] = user;
         req.logIn(user, function(err) {
           logger.info('Inside sign up authentication process');
           logger.debug('Entering req.logIn in order to set the cookie and prior to calling serializeUser');
