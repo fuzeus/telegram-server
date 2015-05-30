@@ -14,8 +14,12 @@ passport.serializeUser(function(user, done) {
 passport.deserializeUser(function(id, done) {
     logger.info('Inside deserializeUser in order to extract unique info from the cookie');
     logger.debug('Entering deserializeUser with the following arguments, id, done');
-    var user = User.findOne({id: id});
-    done(null, user);
+    var user = User.findOne({id: id}, function(err, user) {
+      if (err) {
+        return done(err);
+      }
+      return done(null, user);
+    });
 });
 
 //verify function below: line 20
@@ -135,7 +139,14 @@ usersRouter.get('/', function(req, res) {
 });
 usersRouter.get('/:id', function(req, res) {
     res.send({
-        user: users[req.params.id]
+        //user: users[req.params.id]
+        user: User.findOne({id: req.params.id}, function (err, user) {
+            if (err) {
+              return res.sendStatus(500);
+            } else {
+              return user;
+            }
+        })
     });
 });
 
@@ -150,20 +161,22 @@ usersRouter.post('/', function(req, res) {
             password: req.body.user.meta.password
         });
         user.save(function(err, newUser){
-          if(err){return console.error(err)}//I think I should switch this for res.sendStatus(500);
+          if (err){return res.sendStatus(500);}//I think I should switch this for res.sendStatus(500);
+          else {
+              req.logIn(user, function(err) {
+                  logger.info('Inside sign up authentication process');
+                  logger.debug('Entering req.logIn in order to set the cookie and prior to calling serializeUser');
+                  if (err) {
+                      return res.sendStatus(500);
+                  }
+
+                  res.send({
+                      user: newUser
+                  });
+              })
+          }
         });
         //users[user.id] = user;
-        req.logIn(user, function(err) {
-          logger.info('Inside sign up authentication process');
-          logger.debug('Entering req.logIn in order to set the cookie and prior to calling serializeUser');
-          if (err) {
-              return res.sendStatus(500);
-          }
-
-          res.send({
-            user: user
-          });
-        })
     } else if (req.body.user.meta.operation === 'login') {
         passport.authenticate('local', function(err, user, info) {
             logger.info('Inside passport.authenticate during login operation');
@@ -220,7 +233,7 @@ app.use('/api/users', usersRouter);
 
 
 var postsRouter = express.Router();
-
+/*
 var currentPostId = 4;
 
 var posts = {
@@ -249,17 +262,39 @@ var posts = {
         repost: "p1",
         createdDate: new Date()
     }
-};
+};*/
+
+var postSchema = mongoose.Schema({
+    author: String,//ref to user? population? relationships?,
+    body: String,
+    repost: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
+    createdDate: Date
+});
+
+var Post = mongoose.model('Post', postSchema);
 
 postsRouter.get('/', function(req, res) {
-    var postsArray = Object.keys(posts).map(function(id) {
-        return posts[id];
+    //var postsArray = Object.keys(posts).map(function(id) {
+      //  return posts[id];
+    var postsArray = Post.find( function (err, posts) {
+        if (err) {
+            return res.sendStatus(500);
+        } else {
+            return posts;
+        }
     });
 
     if (req.query.author) {
-        var postsByAuthor = postsArray.filter(function(post) {
+        var postsByAuthor = Post.find ({ author : req.query.author }, function (err, posts){
+            if (err) {
+                return res.sendStatus(500);
+            } else {
+                return posts;
+            }
+        })
+        /*var postsByAuthor = postsArray.filter(function(post) {
             return post.author === req.query.author;
-        });
+        });*/
         return res.send({
             "posts": postsByAuthor
         });
@@ -280,31 +315,51 @@ function ensureAuthenticated(req, res, next) {
 
 postsRouter.post('/', ensureAuthenticated, function(req, res) {
   if( req.user.id === req.body.post.author) {
-    currentPostId++;
-    var post = {
-        id: currentPostId,
+    //currentPostId++;
+    var post = new Post ({
         author: req.body.post.author,
         body: req.body.post.body,
         createdDate: req.body.post.createdDate,
         repost: req.body.post.repost
-    };
-    posts[currentPostId] = post;
-    res.send({
-        "post": post
     });
+    //posts[currentPostId] = post;//insert save with callback
+    post.save(function(err, newPost) {
+        if (err) {
+            return res.sendStatus(500);
+        } else {
+            res.send({
+                "post": newPost
+            });
+        }
+    })
   } else {
-    return res.sendStatus(403);
+        return res.sendStatus(403);
   }
 });
 
-postsRouter.get('/:id', function(req, res) {
+postsRouter.get('/:postid', function(req, res) {
     res.send({
-        'post': posts[req.params.id]
+        'post': Post.findOne({ _id : req.params.postid }, function(err, post) {
+                    if (err) {
+                      res.sendStatus(500);
+                    }
+                    else {
+                      return post;
+                    }
+        })//query Post model by _id
     });
 });
 
-postsRouter.delete('/:id', function(req, res) {
-    res.sendStatus(204);
+postsRouter.delete('/:postid', function(req, res) {
+    Post.remove({ _id : req.params.postid }, function(err, post) {
+        if (err) {
+            return res.sendStatus(500);
+        }
+        else {
+            return res.sendStatus(204);
+        }
+    })
+//query that removes the object, similar to get post route
 });
 
 app.use('/api/posts', postsRouter);

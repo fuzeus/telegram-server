@@ -47,9 +47,10 @@ var userSchema = mongoose.Schema({
 var User = mongoose.model('User', userSchema);
 
 var postSchema = mongoose.Schema({
-  id: String,
-  author: //ref to user? population? relationships?,
+  author: String//ref to user? population? relationships?,
   body: String,
-  repost: String,
+  repost: { type: Schema.Types.ObjectId, ref: 'Post' },
   createdDate: Date
 });
+
+var Post = mongoose.model('Post', postSchema);
