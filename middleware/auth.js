@@ -3,6 +3,8 @@ var LocalStrategy = require('passport-local').Strategy;
 var mongoose = require('../db');
 var logger = require('nlogger').logger(module);
 
+var User = mongoose.model('User');
+
 passport.serializeUser(function(user, done) {
   logger.info('Inside serializeUser in order to provide unique info for the cookie');
   logger.debug('Entering serializeUser with the following arguments, user, done');
@@ -14,7 +16,7 @@ passport.deserializeUser(function(id, done) {
   logger.info('Inside deserializeUser in order to extract unique info from the cookie');
   logger.debug('Entering deserializeUser with the following arguments, id, done');
 
-  var user = User.findOne({id: id}, function(err, user) {
+  User.findOne({id: id}, function(err, user) {
     if (err) {
       return done(err);
     }
