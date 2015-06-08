@@ -3,6 +3,8 @@ var usersRouter = express.Router();
 var mongoose = require('../../db');
 var passport = require('../../middleware/auth');
 var LocalStrategy = require('passport-local').Strategy;
+var bcrypt = require('bcrypt');
+var md5 = require('MD5');
 var logger = require('nlogger').logger(module);
 
 var User = mongoose.model('User');
@@ -42,27 +44,32 @@ usersRouter.post('/', function(req, res) {
   logger.debug('Entering post route to determine if operation is signup or login');
 
   if (req.body.user.meta.operation === 'signup') {
-    var user = new User({
-      id: req.body.user.id,
-      name: req.body.user.name,
-      email: req.body.user.email,
-      password: req.body.user.meta.password
-    });
-    user.save(function(err, newUser){
-      if (err){return res.sendStatus(500);}
-      else {
-        req.logIn(user, function(err) {
-          logger.info('Inside sign up authentication process');
-          logger.debug('Entering req.logIn in order to set the cookie and prior to calling serializeUser');
-
-          if (err) {
-            return res.sendStatus(500);
-          }
-          res.send({
-            user: newUser
-          });
-        })
+    bcrypt.hash(req.body.user.meta.password, 8, function (err, hash) {
+      if (err) {
+        res.sendStatus(500);
       }
+      var user = new User({
+        id: req.body.user.id,
+        name: req.body.user.name,
+        email: req.body.user.email,
+        password: hash
+      });
+      user.save(function(err, newUser){
+        if (err){return res.sendStatus(500);}
+        else {
+          req.logIn(user, function(err) {
+            logger.info('Inside sign up authentication process');
+            logger.debug('Entering req.logIn in order to set the cookie and prior to calling serializeUser');
+
+            if (err) {
+              return res.sendStatus(500);
+            }
+            res.send({
+              user: newUser
+            });
+          })
+        }
+      });
     });
   } else if (req.body.user.meta.operation === 'login') {
     passport.authenticate('local', function(err, user, info) {
@@ -87,6 +94,12 @@ usersRouter.post('/', function(req, res) {
         });
       });
     })(req, res);
+  } else if (req.body.user.meta.operation === 'resetPassword') {
+    var tempPassword = md5(generatePassword());
+    User.findOneAndUpdate( {email: req.body.user.email},
+    { $set: {password: tempPassword }}, function (err, user) {
+      return res.send({user: user});
+    })
   }
 });
 
