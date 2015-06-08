@@ -5,7 +5,14 @@ var passport = require('../../middleware/auth');
 var LocalStrategy = require('passport-local').Strategy;
 var bcrypt = require('bcrypt');
 var md5 = require('MD5');
+var Mailgun = require('mailgun-js');
+var Handlebars = require('handlebars');
+var sendResetPasswordEmail = require('../../emails');
 var logger = require('nlogger').logger(module);
+
+var api-key = 19a22b34e17857fb9f4ac91c39855bc8;
+var domain = sandbox98739a374cb44e1ebef812d5f1dc7e9d.mailgun.org;
+var from_who = tristan@fuzeus.com;
 
 var User = mongoose.model('User');
 
@@ -95,11 +102,31 @@ usersRouter.post('/', function(req, res) {
       });
     })(req, res);
   } else if (req.body.user.meta.operation === 'resetPassword') {
-    var tempPassword = md5(generatePassword());
-    User.findOneAndUpdate( {email: req.body.user.email},
-    { $set: {password: tempPassword }}, function (err, user) {
-      return res.send({user: user});
-    })
+    var tempPassword = generatePassword();
+    var hashmd5 = md5(tempPassword);
+    bcrypt.hash(hashmd5, 8, function (err, hash) {
+      if (err) {
+        res.sendStatus(500);
+      }
+      User.findOneAndUpdate( {email: req.body.user.email},
+      { $set: {password: hash }}, function (err, user) {
+        sendResetPasswordEmail( user, tempPassword, function () {
+          var mailgun = new Mailgun({apiKey: api_key, domain: domain});
+          var data = {
+            from: from_who,
+            to: req.body.user.email,
+            subject: 'Password Reset from Telegram',
+            html: result
+          }
+          mailgun.messages().send(data, function (err, body) {
+            if (err) {
+              
+            }
+          })
+          return res.send({user: user});
+        });
+      })
+    });
   }
 });
 
