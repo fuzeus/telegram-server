@@ -6,7 +6,6 @@ var session = require('express-session');
 module.exports = function (app){
   app.use(bodyParser.json());
   app.use(cookieParser());
-  app.use(bodyParser.json());
   app.use(session({
     secret: 'Why choose Ember over Angular? Because it is on fire!',
     resave: false,
