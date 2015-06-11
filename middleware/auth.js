@@ -1,7 +1,7 @@
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var mongoose = require('../db');
-var bcrypt = require('bcrypt');
+
 var logger = require('nlogger').logger(module);
 
 var User = mongoose.model('User');
@@ -36,7 +36,7 @@ passport.use(new LocalStrategy({
       if (!user) {
         return done(null, false, { message: 'Incorrect username.'});
       }
-      bcrypt.compare(password, user.password, function (err, res) {
+      user.comparePassword( password, function (err, res) {
         if (err) {
           return res.sendStatus(500);
         }
