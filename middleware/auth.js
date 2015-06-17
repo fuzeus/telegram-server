@@ -38,7 +38,9 @@ passport.use(new LocalStrategy({
       }
       user.comparePassword( password, function (err, res) {
         if (err) {
-          return res.sendStatus(500);
+          logger.error(err);
+          
+          return done(err, false);
         }
         else if (!res) {
           return done(null, false, { message: 'Incorrect password.'});

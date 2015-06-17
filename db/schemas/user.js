@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
 var md5 = require('MD5');
+var generatePassword = require('password-generator');
 var logger = require('nlogger').logger(module);
 
 var userSchema = mongoose.Schema({
@@ -9,16 +10,27 @@ var userSchema = mongoose.Schema({
   email: String,
   password: String,
   photo: String,
-  followedByAuthenticatedUser: Boolean
+  following: {type: [], default: []}
 });
 
-userSchema.methods.toClient = function () {
+userSchema.methods.toClient = function (authenticatedUser) {
   var user = {
       id: this.id,
       name: this.name,
       photo: this.photo,
-      followedByAuthenticatedUser: this.followedByAuthenticatedUser
+      followedByAuthenticatedUser: false
   }
+  if (authenticatedUser) {
+    var found = false;
+    authenticatedUser.following.forEach( function(userId) {
+      if (user.id === userId) {
+        found = true;
+      }
+    })
+    user.followedByAuthenticatedUser = found;
+  }
+  logger.debug('user', user, authenticatedUser);
+
   return user;
 }
 
@@ -37,13 +49,13 @@ userSchema.statics.createUser = function (user, next) {
       return next(err);
     }
     user.password = hash;
-    User.create(user, next);//Don't return the new user object?
+    User.create(user, next);
   });
 }
 
 userSchema.statics.resetPassword = function (user, next) {
   logger.debug('Entering static resetPassword in order to generate new password');
-  
+
   var User = this.model('User');
   var tempPassword = generatePassword();
   var hashmd5 = md5(tempPassword);
@@ -52,8 +64,8 @@ userSchema.statics.resetPassword = function (user, next) {
       return next(err);
     }
     User.findOneAndUpdate( {email: user.email},
-    { $set: {password: hash }}, function (password, user) {
-      return next( user, tempPassword);
+    { $set: {password: hash }}, function (err, user) {
+      return next( err, user, tempPassword);
     });
   })
 }

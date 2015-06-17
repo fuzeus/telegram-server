@@ -16,7 +16,9 @@ postsRouter.get('/', function(req, res) {
       }
     });
   } else {
-    Post.find({}, function (err, posts) {
+    var authors = req.user.following;
+    authors.push(req.user.id);
+    Post.find({ author: {$in: authors}}, function (err, posts) {
       if (err) {
         return res.sendStatus(500);
       } else {

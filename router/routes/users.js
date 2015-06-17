@@ -5,6 +5,7 @@ var passport = require('../../middleware/auth');
 var LocalStrategy = require('passport-local').Strategy;
 var sendResetPasswordEmail = require('../../emails');
 var logger = require('nlogger').logger(module);
+var ensureAuthenticated = require('../../middleware/ensureAuthenticated');
 
 var User = mongoose.model('User');
 
@@ -12,18 +13,36 @@ usersRouter.get('/', function(req, res) {
   if (req.query.isAuthenticated) {
     if(req.isAuthenticated()) {
       res.send({
-        users: [req.user] //Should toClient be used here on an array with one object?
+        users: [req.user.toClient()]
       });
     } else{
       res.send({
         users: []
       })
     }
-  } else if (req.query.followedBy || req.query.follows) {
-    User.find({}, function(err, users) {
+  } else if (req.query.following) { //This is for retrieving follow lists. separate these. For req.query.follows, retrieve user matching the id and user.following
+    User.findOne({id: req.query.following}, function (err, user) {
+      if (err) {
+        return res.sendStatus(500);
+      }
+      User.find({id: {$in: user.following}}, function (err, users) {
+        if (err) {
+          return res.sendStatus(500);
+        }
+        var clientUsers = users.map(function(user){
+          return user.toClient(req.user);
+        });
+        return res.send({ users: clientUsers});
+      })
+    });
+  } else if (req.query.followers){
+    User.find({following: req.query.followers}, function (err, users) {
+      if (err) {
+        return res.sendStatus(500);
+      }
       var clientUsers = users.map(function(user){
-        return user.toClient();
-      });
+        return user.toClient(req.user);
+      })
       return res.send({ users: clientUsers});
     });
   } else {
@@ -36,7 +55,7 @@ usersRouter.get('/:id', function(req, res) {
     if (err) {
       return res.sendStatus(500);
     } else {
-      return res.send({user: user.toClient()});
+      return res.send({user: user.toClient(req.user)});
     }
   });
 });
@@ -87,8 +106,8 @@ usersRouter.post('/', function(req, res) {
     })(req, res);
   } else if (req.body.user.meta.operation === 'resetPassword') {
     logger.debug('Entering resetPassword in order to reset the password. Calling static User.resetPassword');
-    
-    User.resetPassword(req.body.user, function (err, user, password) {
+
+    User.resetPassword(req.body.user, function (err, user, tempPassword) {
       sendResetPasswordEmail( user, tempPassword, function (err) {
         return res.send({user: user.toClient()});
       });
@@ -96,15 +115,33 @@ usersRouter.post('/', function(req, res) {
   }
 });
 
-usersRouter.put('/:id', function(req, res) {
+usersRouter.put('/:id', ensureAuthenticated, function(req, res) {
   var id = req.params.id;
-  var user = req.body.user || {};
+  //User.findOneAndUpdate and $addToSet the following user id. Ember is expecting back req.body.user. Have to add the flag for followedByAuthenticatedUser
+  var user = req.body.user || {}; //user that was just followed
+  logger.debug('user', user);
   user.id = id;
-
-  if (user.meta.operation === 'follow' || user.meta.operation === 'unfollow') {
-    return res.send({
-      user: user
-    });
+  if (user.meta.operation === 'follow') { //separate these by the flag true or false
+    user.followedByAuthenticatedUser = true;
+    User.findOneAndUpdate({id: req.user.id}, {$addToSet: {following: user.id}}, function (err) {
+      if (err) {
+        return res.sendStatus(500);
+      } //
+      return res.send({
+        user: user
+      });
+    })
+    //for unfollow, use findOneAndUpdate and $pull to pull the id from the array
+  } else if (user.meta.operation === 'unfollow') {
+    user.followedByAuthenticatedUser = false;
+    User.findOneAndUpdate({id: req.user.id}, {$pull: {following: user.id }}, function (err) {
+      if (err) {
+        return res.sendStatus(500);
+      }
+      return res.send({
+        user: user
+      })
+    })
   } else {
     return res.status(404).send('Invalid operation!');
   }
