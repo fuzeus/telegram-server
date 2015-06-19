@@ -1,10 +1,10 @@
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/telegram');
+var mongoose = require('mongoose')
+  , config = require('../config')
+  , userSchema = require('./schemas/user')
+  , postSchema = require('./schemas/post');
 
-var userSchema = require('./schemas/user');
+mongoose.connect('mongodb://' + config.get('database:host') + '/' + config.get('database:name'));
 mongoose.model('User', userSchema);
-
-var postSchema = require('./schemas/post');
 mongoose.model('Post', postSchema);
 
 module.exports = mongoose;

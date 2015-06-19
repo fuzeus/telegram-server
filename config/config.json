@@ -1,0 +1,7 @@
+{ "mailgun" : { "apiKey" : "key-19a22b34e17857fb9f4ac91c39855bc8",
+                "domain" : "sandbox98739a374cb44e1ebef812d5f1dc7e9d.mailgun.org",
+                "fromWho" : "tristan@fuzeus.com",
+                "subject" : "Passsword Reset from Telegram"},
+  "database": { "name" : "telegram",
+                "host" : "localhost"}
+}

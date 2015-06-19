@@ -1,10 +1,8 @@
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-var mongoose = require('../db');
-
-var logger = require('nlogger').logger(module);
-
-var User = mongoose.model('User');
+var passport = require('passport')
+  , LocalStrategy = require('passport-local').Strategy
+  , mongoose = require('../db')
+  , logger = require('nlogger').logger(module)
+  , User = mongoose.model('User');
 
 passport.serializeUser(function(user, done) {
   logger.info('Inside serializeUser in order to provide unique info for the cookie');
@@ -39,7 +37,7 @@ passport.use(new LocalStrategy({
       user.comparePassword( password, function (err, res) {
         if (err) {
           logger.error(err);
-          
+
           return done(err, false);
         }
         else if (!res) {

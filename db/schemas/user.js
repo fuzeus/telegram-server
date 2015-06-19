@@ -1,8 +1,8 @@
-var mongoose = require('mongoose');
-var bcrypt = require('bcrypt');
-var md5 = require('MD5');
-var generatePassword = require('password-generator');
-var logger = require('nlogger').logger(module);
+var mongoose = require('mongoose')
+  ,  bcrypt = require('bcrypt')
+  , md5 = require('MD5')
+  , generatePassword = require('password-generator')
+  , logger = require('nlogger').logger(module);
 
 var userSchema = mongoose.Schema({
   id: String,
@@ -21,13 +21,7 @@ userSchema.methods.toClient = function (authenticatedUser) {
       followedByAuthenticatedUser: false
   }
   if (authenticatedUser) {
-    var found = false;
-    authenticatedUser.following.forEach( function(userId) {
-      if (user.id === userId) {
-        found = true;
-      }
-    })
-    user.followedByAuthenticatedUser = found;
+    user.followedByAuthenticatedUser = authenticatedUser.following.indexOf(this.id) !== -1;
   }
   logger.debug('user', user, authenticatedUser);
 
@@ -38,6 +32,13 @@ userSchema.methods.comparePassword = function (password, next) {
   bcrypt.compare(password, this.password, next);
 }
 
+userSchema.methods.follow = function (userId, next) {
+  this.update({$addToSet: {following: userId}}, next);
+}
+
+userSchema.methods.unfollow = function (userId, next) {
+  this.update({$pull: {following: userId}}, next);
+}
 userSchema.statics.encryptPassword = function (password, next) {
   bcrypt.hash(password, 8, next);
 }

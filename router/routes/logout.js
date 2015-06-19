@@ -1,6 +1,6 @@
-var express = require('express');
-var logoutRouter = express.Router();
-var mongoose = require('../../db');
+var express = require('express')
+  , mongoose = require('../../db')
+  , logoutRouter = express.Router();
 
 logoutRouter.post('/', function(req, res) {
   req.logout();
