@@ -13,4 +13,4 @@ function runTimedCommand
 runTimedCommand 'sudo apt-get update -y'
 runTimedCommand 'sudo apt-get upgrade -y'
 runTimedCommand 'sudo apt-get dist-upgrade -y'
-
+runTimedCommand 'sudo apt-get install nginx -y'
