@@ -1,0 +1,29 @@
+{{nav-bar authenticatedUser=session.authenticatedUser loggingOut="logOut"}}
+
+<div class="dashboard">
+  <div class="create-post">
+    {{textarea placeholder="What's happening?" value=newPostText autofocus="autofocus"}}
+    <div class="footer clearfix">
+      <div class="characters-left">
+        {{#if overLimit}}
+          <span class="red">{{charLeft}} characters</span>
+        {{else}}
+          {{charLeft}} characters
+        {{/if}}
+      </div>
+        {{#if overLimit}}
+          <button class="publish dark-gray-btn">Publish</button>
+        {{else}}
+          <button class="publish dark-gray-btn" {{action "createPost"}}>Publish</button>
+        {{/if}}
+    </div>
+  </div>
+
+  <div class="title">Latest posts</div>
+
+  <div class="posts-list">
+    {{#each post in controller}}
+        {{post-block post=post authenticatedUser=session.authenticatedUser delete="deletePost" createRepost="repost"}}
+    {{/each}}
+  </div>
+</div>

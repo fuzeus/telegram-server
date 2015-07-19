@@ -1,0 +1,24 @@
+{{nav-bar authenticatedUser=session.authenticatedUser loggingOut="logOut"}}
+
+<div class="profile">
+  <div class="user-header">
+    <img class="avatar" src="{{model.photo}}"/>
+    <div class="name">{{model.name}}</div>
+    <div class="username">@{{model.id}}</div>
+      {{#if notAuthenticatedUser}}
+        {{#if model.followedByAuthenticatedUser}}
+          <button class="blue-btn follow" {{action "toggleFollowCurrentUser"}}>Unfollow</button>
+        {{else}}
+          <button class="blue-btn follow" {{action "toggleFollowCurrentUser"}}>Follow</button>
+        {{/if}}
+      {{/if}}
+  </div>
+
+  <div class="tab-header">
+    {{#link-to "user.posts" class="tab"}}Posts{{/link-to}}
+    {{#link-to "user.following" class="tab"}}Following{{/link-to}}
+    {{#link-to "user.followers" class="tab"}}Followers{{/link-to}}
+  </div>
+
+  {{outlet}}
+</div>

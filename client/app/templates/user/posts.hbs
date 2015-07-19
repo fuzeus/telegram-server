@@ -1,0 +1,5 @@
+<div class="posts-list">
+  {{#each post in controller}}
+    {{post-block post=post authenticatedUser=session.authenticatedUser}}
+  {{/each}}
+</div>

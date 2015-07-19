@@ -1,0 +1,21 @@
+{{outlet}}
+<div class= "create">
+  <p>Reset password</p>
+</div>
+<div class="signin">
+  <form {{action "resetPassword" on="submit"}}>
+    {{input type="text"
+            name="email"
+            class="username"
+            placeholder="Enter your email..."
+            value=email}}
+
+    <div class="rest">
+      <div class="log">
+        {{input type="submit"
+                value ="Reset password"
+                name = "Reset password"}}
+      </div>
+    </div>
+  </form> 
+</div>

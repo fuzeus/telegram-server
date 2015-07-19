@@ -1,0 +1,43 @@
+<div class= "create">
+  <p>Create your account</p>
+</div>
+
+<form {{action "signup" on="submit"}} class="signin">
+  {{input type="text"
+          name="name"
+          class="username"
+          placeholder="Enter your name..."
+          value=name}}
+  {{input type="text"
+          name="email"
+          class="username"
+          placeholder="Enter your email..."
+          value=email}}
+  {{input type="text"
+          name="username"
+          class="username"
+          placeholder="Enter your username..."
+          value=username}}
+
+  {{input type="password"
+          placeholder="Enter your password..."
+          name="password"
+          class="password"
+          value=password}}
+
+  {{#if error}}
+    <div class="red-color">{{error}}</div>
+  {{/if}}
+
+  <div class="signup">
+    <div class="log">
+      {{input type="submit"
+              value="Sign up"
+              name="Sign up"}}
+
+      <span class="login">
+        {{#link-to "auth.login"}}Login{{/link-to}}
+      </span>
+    </div>
+  </div>
+</form>

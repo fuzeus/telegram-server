@@ -1,0 +1,19 @@
+<div class="user-block clearfix">
+  {{#link-to "user" user class="avatar link"}}
+    <img src="{{user.photo}}"/>
+  {{/link-to}}
+
+  <div class="name">
+    {{#link-to "user" user class="link"}}{{user.name}}{{/link-to}}
+  </div>
+
+  {{#if user.followedByAuthenticatedUser}}
+    <label class="blue-btn follow relative-center-y" {{action "sendFollow"}}>
+      Unfollow
+    </label>
+  {{else}}
+    <label class="blue-btn follow relative-center-y" {{action "sendFollow"}}>
+      Follow
+    </label>
+  {{/if}}
+</div>

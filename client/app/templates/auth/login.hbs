@@ -1,0 +1,39 @@
+<div class= "create">
+  <p>Get going...</p>
+</div>
+
+<form {{action "login" on="submit"}} class="signin">
+  {{input type="text"
+          name="username"
+          class="username"
+          placeholder="Enter your username..."
+          value=username}}
+
+  {{input type="password"
+          placeholder="Enter your password..."
+          name="password"
+          class="password"
+          value=password}}
+
+  {{#if error}}
+    <div class="red-color">{{error}}</div>
+  {{/if}}
+
+  <div class="rest">
+    <div class="log">
+      {{input type="submit"
+              value="Log in"
+              name="Log in"}}
+
+      <span class="rec">
+        {{#link-to "auth.reset"}}Recover password{{/link-to}}
+      </span>
+
+      <span class="mid"> or </span>
+
+      <span class="sign">
+        {{#link-to "auth"}}Sign Up{{/link-to}}
+      </span>
+    </div>
+  </div>
+</form>

@@ -1,0 +1,74 @@
+{{#unless showRepostBox}}
+  {{#if post.repost}}
+    <div class="post-block clearfix">
+      <div class="repost-header clearfix">
+        <img class="icon" src="assets/images/icon-retweet.png"/>
+        <div class="author">
+          Reposted by
+          {{#link-to 'user' post.author class="dark-gray-link"}} {{post.author.name}} {{/link-to}}
+        </div>
+      </div>
+
+      {{#link-to "user" post.repost.author class="avatar link"}}
+        <img src="{{post.repost.author.photo}}"/>
+      {{/link-to}}
+
+      <div class="content">
+        <div class="author">
+          {{#link-to 'user' post.repost.author class="link"}}
+            {{post.repost.author.name}}
+          {{/link-to}}
+        </div>
+        <div class="text">{{post.body}}</div>
+        <div class="footer">
+          <span>{{ago createdDate}}</span>
+          <span class="middot">&middot;</span>
+          <span>Reposted</span>
+          <span class="middot">&middot;</span>
+          {{#if ownPost}}
+            <label class="blue-link" {{action "sendDelete"}}>Delete</label>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  {{else}}
+    <div class="post-block clearfix">
+      {{#link-to 'user' post.author class="avatar link"}}
+        <img class="avatar link" src="{{post.author.photo}}"/>
+      {{/link-to}}
+
+      <div class="content">
+        <div class="author">
+          {{#link-to 'user' post.author class="link"}}
+            {{post.author.name}}
+          {{/link-to}}
+        </div>
+        <div class="text">
+          <label>{{post.body}}</label>
+        </div>
+        <div class="footer">
+          <span class="timestamp">{{ago createdDate}}</span>
+          <span class="middot">&middot;</span>
+          {{#if ownPost}}
+            <label class="blue-link" {{action "sendDelete"}}>Delete</label>
+          {{else}}
+            <button class="blue-link" {{action "showConfirmation"}}>Repost</button>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  {{/if}}
+{{else}}
+  <div class="post-block clearfix confirm-repost">
+    <img class="avatar" src="assets/images/icon-retweet.png"/>
+
+    <div class="content">
+      <div class="question">Repost this to your followers?</div>
+      <div class="footer">
+        <button class="blue-link" {{action "sendRepost"}}>Yes</button>
+        <span class="middot">&middot;</span>
+        <button class="blue-link" {{action "cancel"}}>No</button>
+      </div>
+    </div>
+  </div>
+{{/unless}}
