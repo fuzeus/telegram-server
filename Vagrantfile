@@ -4,7 +4,8 @@
 Vagrant.configure(2) do |config|
 
   # config as necessary
-  # config.vm.synced_folder "./data", "/vagrant_data"
+  config.vm.synced_folder "./server", "/home/ubuntu/telegram-server"
+  config.vm.synced_folder "./client", "/home/ubuntu/telegram-client"
 
   config.vm.define "master" do |master|
     master.vm.box = "ubuntu/trusty64"
