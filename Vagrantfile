@@ -8,10 +8,12 @@ Vagrant.configure(2) do |config|
 
   config.vm.define "master" do |master|
     master.vm.box = "ubuntu/trusty64"
-    master.vm.network "forwarded_port", guest: 8000, host: 8081
+    master.vm.network "forwarded_port", guest: 3000, host: 3000
+    master.vm.network "forwarded_port", guest: 80, host: 8081
+    master.vm.network "forwarded_port", guest: 4200, host: 4200
     master.vm.network "private_network", ip: "192.168.75.100"
     master.vm.hostname = "telegram"
-    master.vm.post_up_message = "master at http://localhost:8081"
+    master.vm.post_up_message = "Welcome to telegram"
   end
 
   config.vm.provider "virtualbox" do |v|
