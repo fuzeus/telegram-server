@@ -50,11 +50,3 @@ sudo port select --set pip pip27
 if [ ! -f ~/.bash_profile ] || [ $(cat ~/.bash_profile|grep /opt/local/bin|wc -l) -lt 1 ]; then
 	echo -e '\nexport PATH=/opt/local/bin:$PATH' >> ~/.bash_profile
 fi
-
-# TODO: fix wireshark (https://trac.macports.org/ticket/46850)
-	# Start X11
-	# export DISPLAY=:0; wireshark
-# TODO: add and configure mysql
-# TODO: add and configure tomcat
-# TODO: add and configure nginx
-# TODO: add and configure apache2
