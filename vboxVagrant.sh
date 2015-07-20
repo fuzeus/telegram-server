@@ -9,7 +9,7 @@ wget http://download.virtualbox.org/virtualbox/$vboxLatest/VBoxGuestAdditions_$v
      -O ~/Downloads/VBoxGuestAdditions_$vboxLatest.iso
 
 curl -s http://download.virtualbox.org/virtualbox/$vboxLatest/|grep dmg \
-     |perl -lpe 's/(.*)(HREF=")(VirtualBox-'$vboxLatest'-\d+-OSX.dmg)(".*)/$3/g' \
+     |perl -lpe 's/(.*)(href=")(VirtualBox-'$vboxLatest'-\d+-OSX.dmg)(".*)/$3/g' \
      | xargs -I {} wget http://download.virtualbox.org/virtualbox/$vboxLatest/{} -O ~/Downloads/vbox.dmg
 hdiutil attach ~/Downloads/vbox.dmg
 sudo installer -pkg /Volumes/VirtualBox/VirtualBox.pkg -target /
