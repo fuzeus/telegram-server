@@ -15,7 +15,18 @@ function runTimedCommand
 # runTimedCommand 'sudo apt-get upgrade -y'
 # runTimedCommand 'sudo apt-get dist-upgrade -y'
 
-runTimedCommand 'sudo apt-get install nginx nodejs npm mongodb -y'
-runTimedCommand 'sudo npm install -g ember-cli'
-runTimedCommand 'sudo ln -s /usr/bin/nodejs /usr/bin/node' 
-runTimedCommand 'cd /home/vagrant/telegram-server; sudo -u vagrant npm install' 
+runTimedCommand 'apt-get install nginx nodejs npm mongodb git -y'
+runTimedCommand 'ln -s /usr/bin/nodejs /usr/bin/node' 
+runTimedCommand 'npm install -g ember-cli bower'
+runTimedCommand 'ember update'
+
+rm -Rf /home/vagrant/telegram-server/node_modules
+rm -Rf /home/vagrant/telegram-client/node_modules
+rm -Rf /home/vagrant/telegram-client/bower_components
+rm -Rf /home/vagrant/telegram-client/dist
+rm -Rf /home/vagrant/telegram-client/tmp
+
+sudo -u vagrant bash -c "cd /home/vagrant/telegram-server; export HOME=/home/vagrant; set; npm install"
+sudo -u vagrant bash -c "cd /home/vagrant/telegram-client; export HOME=/home/vagrant; set; npm install"
+sudo -u vagrant bash -c "cd /home/vagrant/telegram-client; export HOME=/home/vagrant; set; bower install"
+sudo -u vagrant bash -c "cd /home/vagrant/telegram-client; export HOME=/home/vagrant; set; ember build"
